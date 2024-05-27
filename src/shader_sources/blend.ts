@@ -1,6 +1,6 @@
 import { ShaderSource } from "../shader/mod.ts";
 
-export default new ShaderSource(`
+const source: ShaderSource = new ShaderSource(`
 uniform sampler2D blender_srcImage;
 uniform sampler2D blender_dstImage;
 uniform vec4 blender_srcArea;
@@ -183,3 +183,4 @@ vec3 blend(vec3 a, vec3 b) {
 #endif
 `);
 
+export default source;
