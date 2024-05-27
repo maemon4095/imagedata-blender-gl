@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "deno.window",
+      "dom",
+      "dom.iterable"
+    ]
+  },
+  "name": "@maemon4095/imagedata-blender-gl",
+  "version": "0.0.0",
+  "exports": "./src/mod.ts"
+}
