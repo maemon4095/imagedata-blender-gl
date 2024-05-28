@@ -2,7 +2,6 @@ import type { ShaderSource, Shader, ShaderArgs } from "./shader/mod.ts";
 import vertexShaderSource from "./vertexShader.ts";
 import * as webgl from "./webgl.ts";
 
-
 export class Blender {
     #canvas: OffscreenCanvas;
     #gl: WebGL2RenderingContext | null;
@@ -137,6 +136,9 @@ export class Blender {
         // draw
         gl.drawArrays(gl.TRIANGLES, 0, 6 /** vertex count; a rectangle = two triangles = 3 * 2 vertices. */);
 
+        // clean up
+        gl.deleteBuffer(positionBuffer);
+
         // swap buffer
         this.#endPass();
     }
@@ -157,13 +159,53 @@ export class Blender {
         const w = this.width;
         const h = this.height;
         const gl = this.#gl;
-        if (gl === null) {
-            throw new Error("Blender does not initialized.");
-        }
         const buffer = new Uint8ClampedArray(w * h * 4);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.#currentFrameBuffer);
-        gl.readPixels(0, 0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+        if (gl !== null) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.#currentFrameBuffer);
+            gl.readPixels(0, 0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+        }
         return new ImageData(buffer, w, h);
+    }
+
+    clear(): void {
+        if (this.#gl === null) {
+            this.#init();
+        }
+        const gl = this.#gl!;
+        gl.bindTexture(gl.TEXTURE_2D, this.#currentTexture);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
+    cleanUp(): void {
+        const gl = this.#gl;
+        if (gl === null) return;
+        // delete fragment shaders
+        for (const [_, program] of this.#shaderCache) {
+            gl.deleteProgram(program);
+        }
+        this.#shaderCache.clear();
+
+        // delete vertex shader
+        gl.deleteShader(this.#vertexShader);
+        this.#vertexShader = null;
+
+        // delete frameBuffers
+        gl.deleteFramebuffer(this.#currentFrameBuffer);
+        gl.deleteFramebuffer(this.#outputFrameBuffer);
+        this.#currentFrameBuffer = null;
+        this.#outputFrameBuffer = null;
+
+        // delete textures
+        gl.deleteTexture(this.#inputTexture);
+        gl.deleteTexture(this.#currentTexture);
+        gl.deleteTexture(this.#outputTexture);
+        this.#inputTexture = null;
+        this.#currentTexture = null;
+        this.#outputTexture = null;
+
+        // delete context
+        this.#gl = null;
     }
 }
 type Rect = {
