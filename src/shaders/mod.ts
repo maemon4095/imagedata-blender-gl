@@ -71,6 +71,10 @@ export class BlendShader implements Shader {
     static readonly softLight: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "10" }), CompositeMethod.sourceOver);
     static readonly difference: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "11" }), CompositeMethod.sourceOver);
     static readonly exclusion: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "12" }), CompositeMethod.sourceOver);
+    static readonly hue: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "13" }), CompositeMethod.sourceOver);
+    static readonly saturation: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "14" }), CompositeMethod.sourceOver);
+    static readonly color: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "15" }), CompositeMethod.sourceOver);
+    static readonly luminosity: BlendShader = new BlendShader(src.blend.withDefine({ METHOD: "16" }), CompositeMethod.sourceOver);
 
     readonly src: ShaderSource;
     readonly args: ShaderArgs;

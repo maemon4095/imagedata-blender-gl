@@ -69,6 +69,56 @@ float hardLight(float a, float b) {
     }
 }
 
+
+float lum(vec3 c) {
+    return 0.3 * c.r + 0.59 * c.g + 0.11 * c.b;
+}
+
+vec3 clipColor(vec3 c) {
+    float l = lum(c);
+    float n = min(c.r, min(c.g, c.b));
+    float x = max(c.r, max(c.g, c.b));
+    if (n < 0.0) {
+        c = l + (((c - l) * l) / (l - n));
+    }
+    if (x > 1.0) {
+        c = l + (((c - l) * (1.0 - l)) / (x - l));
+    }
+    return c;
+}
+
+
+vec3 setLum(vec3 c, float l) {
+    float d = l - lum(c);
+    return clipColor(c + d);
+}
+
+float sat(vec3 c) {
+    return max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
+}
+
+vec3 setSat(vec3 c, float s) {
+    #define SAT(min, mid, max) if (c.max > c.min) { c.mid = (c.mid - c.min) * s / (c.max - c.min); c.max = s; } else { c.mid = c.max = 0.0; } c.min = 0.0; return c;
+
+    if(c.r > c.g) {
+        if(c.b > c.r) { // b > r > g
+            SAT(b, r, g);
+        } else if(c.b > c.g) { // r >= b > g
+            SAT(r, b, g);
+        } else { // r >= g >= b
+            SAT(r, g, b);
+        }
+    } else { // g >= r
+        if (c.b > c.g) { // b > g >= r
+            SAT(b, g, r);
+        } else if (c.b > c.r) { // g >= b > r
+            SAT(g, b, r);
+        } else { // g >= r >= b
+            SAT(g, r, b);
+        }
+    }   
+}
+
 #if (METHOD == 1) // normal
 #define CHANNEL_BLEND true
 float blendCh(float src, float dst) {
@@ -149,12 +199,10 @@ float blendCh(float src, float dst) {
 float blendCh(float a, float b) {
     if (a <= 0.5) {
         return b - (1.0 - 2.0 * a) * b * (1.0 - b);
-    } else
-        {
-    const d = b <= 0.25 ? ((16.0 * b - 12.0) * b + 4.0) * b : sqrt(b);
-
-    return b + (2.0 * a - 1) * (d - b);
-}
+    } else {
+        const d = b <= 0.25 ? ((16.0 * b - 12.0) * b + 4.0) * b : sqrt(b);
+        return b + (2.0 * a - 1) * (d - b);
+    }
 }
 #endif
 
@@ -165,10 +213,34 @@ float blendCh(float a, float b) {
 }
 #endif
 
-#if (METHOD == 12)
+#if (METHOD == 12) // exclusion
 #define CHANNEL_BLEND true
 float blendCh(float a, float b) {
     return b + a - 2 * b * a;
+}
+#endif
+
+#if (METHOD == 13) // hue 
+vec3 blend(vec3 a, vec3 b) {
+    return setLum(setSat(a, sat(b)), lum(b));   
+}
+#endif
+
+#if (METHOD == 14) // saturation 
+vec3 blend(vec3 a, vec3 b) {
+    return setLum(setSat(b, sat(a)), lum(b));
+}
+#endif
+
+#if (METHOD == 15) // color 
+vec3 blend(vec3 a, vec3 b) {
+    return setLum(a, lum(b));
+}
+#endif
+
+#if (METHOD == 16) // luminosity 
+vec3 blend(vec3 a, vec3 b) {
+    return setLum(b, lum(a));
 }
 #endif
 
