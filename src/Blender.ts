@@ -167,6 +167,10 @@ export class Blender {
         return new ImageData(buffer, w, h);
     }
 
+    transferToImageBitmap(): ImageBitmap {
+        return this.#canvas.transferToImageBitmap();
+    }
+
     clear(): void {
         if (this.#gl === null) {
             this.#init();
